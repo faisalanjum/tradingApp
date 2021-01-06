@@ -10,6 +10,7 @@ idna==2.10
 Mako==1.1.3
 MarkupSafe==1.1.1
 numpy==1.19.4
+openfigi==0.0.8
 pandas==1.2.0
 pipreqs==0.4.10
 psycopg2==2.8.6

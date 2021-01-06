@@ -3,15 +3,44 @@ from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.orm import relationship
 from sqlalchemy import Column,Integer,String,Boolean
-from sqlalchemy import ForeignKey,Date,BigInteger,Float,Text,DateTime,String,Time
+from sqlalchemy import ForeignKey,Date,BigInteger,Float,Text,DateTime,String,Time,Sequence
 from sqlalchemy.sql import func
-from sqlalchemy import Enum, UniqueConstraint
-import enum
+from sqlalchemy import Enum, UniqueConstraint,PrimaryKeyConstraint
+import enum 
 from sqlalchemy.event import listens_for
 
 
 
 Base = declarative_base()
+
+
+
+
+class User(Base):
+
+    #tablename
+
+    __tablename__="users"
+
+    
+
+    #columns
+    id=Column("id",Integer,primary_key=True)
+
+
+    name=Column("name",String,nullable=False)
+    alpaca_secret=Column("alpaca_secret",String,nullable=False)
+    alpaca_key=Column("alpaca_key",String,nullable=False)
+    created_at=Column("created_at",DateTime(timezone=True),server_default=func.now())
+    updated_at=Column("updated_at",DateTime(timezone=True),server_default=func.now())
+
+    
+
+
+
+
+
+
 
 # Vendor Table
  
@@ -20,13 +49,18 @@ class Vendor(Base):
    #tablename
 
     __tablename__="vendors"
+    __table_args__=tuple([UniqueConstraint("name")])
 
    #column_schema 
-    id=Column(Integer,primary_key=True)
-    name=Column(String,nullable=False)
-    vendor_id=Column(String,nullable=True)
-    created_at=Column(DateTime(timezone=True), server_default=func.now())
-    updated_at=Column(DateTime(timezone=True), onupdate=func.now())
+    id=Column("id",Integer,primary_key=True)
+    name=Column("name",String,nullable=False)
+    vendor_id=Column("vendor_id",String,nullable=True)
+    created_at=Column("created_at",DateTime(timezone=True), server_default=func.now())
+    updated_at=Column("updated_at",DateTime(timezone=True), onupdate=func.now())
+
+    def __repr__(self):
+        return "<Vendor(id='%s',name='%s', vendor_id='%s', created_at='%s',updated_at='%s')>" % (
+                             self.id,self.name, self.vendor_id, self.created_at,self.updated_at)
    
 
 
@@ -34,13 +68,16 @@ class Vendor(Base):
 
 class Exchange(Base):
     __tablename__ = "exchange"
-    id=Column(Integer,primary_key=True,autoincrement=True)
+    id=Column(Integer,autoincrement=True)
+    exchange_id=Column(String,primary_key=True)
+    mic=Column(String)
     name=Column(String,nullable=False)
     acronmy=Column(String)
-    mic=Column(String)
-    timezone_offset=Column(DateTime,nullable=False)
-    country=Column(String,nullable=False)
-    currency=Column(String,nullable=False)
+    
+    timezone_offset=Column(DateTime)
+    country=Column(String)
+    currency=Column(String)
+    
 
 
 
@@ -48,21 +85,43 @@ class Exchange(Base):
 
 class Symbol(Base):
     __tablename__="symbol"
-    id=Column(Integer,primary_key=True,autoincrement=True)
+    __table_args__ = tuple([UniqueConstraint('ticker')])
+    id=Column(Integer,Sequence("symbol_id_seq"),primary_key=True,autoincrement=True)
     provided_by=Column(Integer,ForeignKey("vendors.id"))
-    exchange_id=Column(Integer,ForeignKey("exchange.id"))
-    currency=Column(String,nullable=False)
-    ticker=Column(String,nullable=False)
-    instrument=Column(String,nullable=False)
+    exchange_Acr=Column(String)
+    ticker=Column(String)
     name=Column(String,nullable=False)
-    figi=Column(String,nullable=True)
-    composite_figi=Column(String,nullable=True)
-    share_class_figi=Column(String,nullable=True)
-    share_class=Column(String,nullable=True)
-    created_at=Column(DateTime(timezone=True),server_default=func.now())   
-    updated_at=Column(DateTime(timezone=True),onupdate=func.now())
-    exchange=relationship("Exchange",backref="symbol_exchange")
-    vendor=relationship("Vendor",backref="symbol_vendors")
+
+    # relationship
+
+    
+    
+    figi_details=relationship("Figi")
+
+    prices_interday=relationship("StockPricesIntraday")
+
+    prices_daily=relationship("StockPricesDaily")
+
+
+
+
+class Figi(Base):
+
+    __tablename__="openfigi"
+    id=Column(Integer,primary_key=True,autoincrement=True)
+    figi=Column(String)
+    name=Column(String)
+    ticker=Column(String,ForeignKey("symbol.ticker"))
+    exchCode=Column(String)
+    compositeFigi=Column(String)
+    uniqueID=Column(String)
+    securityType=Column(String)
+    marketSector=Column(String)
+    shareClassFigi=Column(String)
+    uniqueIDFutOpt=Column(String)
+    securityType2=Column(String)
+    securityDescription=Column(String)
+
     
 
 #Company Table
@@ -71,7 +130,7 @@ class Symbol(Base):
 class Company(Base):
     __tablename__="company"
     id=Column(Integer,primary_key=True)
-    symbol_id=Column(Integer,ForeignKey("symbol.id"))
+    symbol_id=Column(String,ForeignKey("symbol.ticker"))
     name=Column(Text,nullable=False)
     cik=Column(String,nullable=False)
     sector=Column(String,nullable=False)
@@ -80,43 +139,28 @@ class Company(Base):
     company_url=Column(String,nullable=False)
     description=Column(Text,nullable=True)
     sic=Column(String)
-    symbol=relationship('Symbol',backref="company_symbol")
-
-
-
-
-
-#stockPrices Daily
-
-class StockPricesDaily(Base):
-    __tablename__="stock_prices_daily"
-    id=Column(Integer,primary_key=True)
-    company_id=Column(Integer,ForeignKey('company.id'))
-    vendor_id=Column(Integer,ForeignKey('vendors.id'))
-    datetime=Column(DateTime,nullable=False)
-    open=Column(Float,nullable=False)
-    high=Column(Float,nullable=False)
-    low=Column(Float,nullable=False)
-    close=Column(Float,nullable=False)
-    volume=Column(BigInteger,nullable=False) 
-    adj_open=Column(Float,nullable=False)
-    adj_high=Column(Float,nullable=False)
-    adj_low=Column(Float,nullable=False)
-    adj_close=Column(Float,nullable=False)
-    adj_volume=Column(Float,nullable=False)
+    symbol=relationship('Symbol')
+    
     created_at=Column(DateTime(timezone=True), server_default=func.now())
     updated_at=Column(DateTime(timezone=True) , onupdate=func.now())
-    company=relationship("Company",backref='company_details')
-    vendor=relationship("Vendor",backref="vendor_details")
 
+
+
+
+
+
+    
 
 #stockPrices Daily
 
 class StockPricesIntraday(Base):
     __tablename__="stock_prices_intraday"
     id=Column(Integer,primary_key=True)
-    company_id=Column(Integer,ForeignKey('company.id'))
+
+    __table_args__=tuple([UniqueConstraint('vendor_id', 'stock_symbol', "datetime")])
+    
     vendor_id=Column(Integer,ForeignKey('vendors.id'))
+    stock_symbol=Column(String,ForeignKey("symbol.ticker"),nullable=False)
     datetime=Column(DateTime,nullable=False)
     open=Column(Float,nullable=False)
     high=Column(Float,nullable=False)
@@ -131,9 +175,39 @@ class StockPricesIntraday(Base):
     frequency=Column(String,nullable=False)
     created_at=Column(DateTime(timezone=True), server_default=func.now())
     updated_at=Column(DateTime(timezone=True),onupdate=func.now())
-    company_details=relationship("Company",backref='company_info')
-    vendor=relationship("Vendor",backref="vendor_info")
 
+
+
+
+
+
+
+
+
+
+#stockPrices Daily
+
+class StockPricesDaily(Base):
+    __tablename__="stock_prices_daily"
+    id=Column(Integer,primary_key=True)
+    __table_args__=tuple([UniqueConstraint('vendor_id', 'stock_symbol', "datetime")])
+    vendor_id=Column(Integer,ForeignKey('vendors.id'),nullable=True)
+    stock_symbol=Column(String,ForeignKey("symbol.ticker"))
+    datetime=Column(DateTime,nullable=False)
+    open=Column(Float,nullable=False)
+    high=Column(Float,nullable=False)
+    low=Column(Float,nullable=False)
+    close=Column(Float,nullable=False)
+    volume=Column(BigInteger,nullable=False) 
+    adj_open=Column(Float,nullable=True)
+    adj_high=Column(Float,nullable=True)
+    adj_low=Column(Float,nullable=True)
+    adj_close=Column(Float,nullable=True)
+    adj_volume=Column(Float,nullable=True)
+    created_at=Column(DateTime(timezone=True), server_default=func.now())
+    updated_at=Column(DateTime(timezone=True) , onupdate=func.now())
+   
+    
 #StockAdjustments
 
 class StockAdjustment(Base):
@@ -169,6 +243,88 @@ class FinancialStatementPeriod(enum.Enum):
     q2 = 'q2'
     q3 = 'q3'
     q4 = 'q4'
+
+
+
+
+class Strategy(Base):
+
+    #tablename
+    __tablename__="strategy"
+    
+    #columns
+    id=Column(Integer,primary_key=True)
+    name=Column(String,nullable=False)
+    created_by=Column(Integer,ForeignKey("users.id"))
+    description=Column(Text,nullable=False)
+    created_at=Column(DateTime(timezone=True),server_default=func.now())
+    updated_at=Column(DateTime(timezone=True),server_default=func.now())
+    
+    #relationship
+   
+
+
+
+#Strategyexecuted table 
+
+class StrategyExecuted(Base):
+    
+    #tablename
+    __tablename__="strategies_executed"
+
+    
+    #columns
+    id=Column(Integer,primary_key=True)
+    executed_by=Column(Integer,ForeignKey("users.id"))
+    strategy_executed=Column(Integer,ForeignKey("strategy.id"))
+    executed_on=Column(String,ForeignKey("symbol.ticker"))
+    order_placed=Column(Boolean,default=0)
+    created_at=Column(DateTime(timezone=True),server_default=func.now())
+    updated_at=Column(DateTime(timezone=True),server_default=func.now())
+    
+    #relationships
+    
+   
+
+
+
+
+#orders table
+
+class Orders(Base):
+
+    #tablename
+    __tablename__="orders"
+
+
+    #columns
+    
+    id=Column(Integer,primary_key=True)
+    ordered_by=Column(Integer,ForeignKey("users.id"))
+    through_strategy=Column(Integer,ForeignKey("strategies_executed.id"))
+    order_date=Column(DateTime(timezone=True),server_default=func.now())
+    order_updated=Column(DateTime(timezone=True),server_default=func.now())
+
+    #relationships
+    desc=relationship("StrategyExecuted",backref="strategy")
+
+
+
+
+
+#relationship
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 class FinancialStatement(Base):
@@ -303,90 +459,7 @@ def insert_initial_values(*args, **kwargs):
 
 
 
-class User(Base):
-
-    #tablename
-
-    __tablename__="users"
-
-
-    #columns
-    id=Column(Integer,primary_key=True)
-    name=Column(String,nullable=False)
-    alpaca_id=Column(String,nullable=False)
-    created_at=Column(DateTime(timezone=True),server_default=func.now())
-    updated_at=Column(DateTime(timezone=True),server_default=func.now())
 
 
 #strategy_table
-
-class Strategy(Base):
-
-    #tablename
-    __tablename__="strategy"
-    
-    #columns
-    id=Column(Integer,primary_key=True)
-    name=Column(String,nullable=False)
-    create_by=Column(Integer,ForeignKey("users.id"))
-    description=Column(Text,nullable=False)
-    created_at=Column(DateTime(timezone=True),server_default=func.now())
-    updated_at=Column(DateTime(timezone=True),server_default=func.now())
-    
-    #relationship
-    user=relationship('User',back_populates="user_details")
-    
-
-
-
-#Strategyexecuted table 
-
-class StrategyExecuted(Base):
-    
-    #tablename
-    __tablename__="strategies_executed"
-
-    
-    #columns
-    id=Column(Integer,primary_key=True)
-    executed_by=Column(Integer,ForeignKey("users.id"))
-    strategy_executed=Column(Integer,ForeignKey("strategy.id"))
-    executed_on=Column(Integer,ForeignKey("symbol.id"))
-    order_placed=Column(Boolean,default=0)
-    created_at=Column(DateTime(timezone=True),server_default=func.now())
-    updated_at=Column(DateTime(timezone=True),server_default=func.now())
-    
-    #relationships
-    user=relationship("User",back_populates="users_info")
-    strategy=relationship("Strategy",back_populates="strategy_info")
-    security=relationship("Symbol",back_populates="security_info")
-
-
-
-
-
-
-
-#orders table
-
-class Orders(Base):
-
-    #tablename
-    __tablename__="orders"
-
-
-    #columns
-    
-    id=Column(Integer,primary_key=True)
-    ordered_by=Column(Integer,ForeignKey("users.id"))
-    through_strategy=Column(Integer,ForeignKey("strategies_executed.id"))
-    order_date=Column(DateTime(timezone=True),server_default=func.now())
-    order_updated=Column(DateTime(timezone=True),server_default=func.now())
-
-    #relationships
-    desc=relationship("StrategyExecuted",backref="Strategy_details")
-
-
-
-
 

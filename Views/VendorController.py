@@ -21,9 +21,13 @@ class VendorController:
 
 		self.url=config.DB_URL
 		self.Session=sessionmaker()
+		
 
 
 	def addVendor(self,vendor_info):
+
+
+
 		
 		engine=create_engine(self.url)
 		self.Session.configure(bind=engine)
@@ -33,7 +37,7 @@ class VendorController:
 
 		except Exception as e:
 			session.rollback()
-			raise e
+			print (f"Possible Duplicate Value Error:{e}")
 		finally:
 			session.commit()
 
@@ -58,11 +62,15 @@ class VendorController:
    
 obj=VendorController()
 
-dct=list()
-dct.append({
-	"name":"Alpaca",
-	"vendor_id":"PKI36ROS1FUJVRPI1UK7",}
-)	
 
-obj.addVendor(vendor_info=dct)
+rec=[{
+	"name":"Alpaca",
+	"vendor_id":"PKI36ROS1FUJVRPI1UK7",},
+
+	{
+	"name":"openfigi",
+	"vendor_id":"",}]
+
+
+obj.addVendor(vendor_info=rec)
 

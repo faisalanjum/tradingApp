@@ -32,7 +32,13 @@ API_KEY_SIMFIN = "vHOwuZOEK3CR3tLhv4wHjVohTK9Brv2h"
 DB_USER="postgres"
 DB_PASSWORD="Sunny@123"
 DB_HOST="localhost"
-DB_NAME="tradingapp"
+DB_NAME="trading"
 DB_URL=f"postgres://{DB_USER}:{DB_PASSWORD}@{DB_HOST}/{DB_NAME}"
+
+
+#Open FIGI
+
+OPEN_FIGI_KEY=''
+OPEN_FIGI_URL='https://api.openfigi.com/v2/mapping'
 
 
