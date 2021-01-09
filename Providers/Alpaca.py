@@ -5,6 +5,7 @@ import sys,os
 sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))
 import alpaca_trade_api as Api
 import config as Config
+import pandas as pd
 
 
 
@@ -114,7 +115,7 @@ class Alpaca:
             
 
 
-    def getStockPrices(self,symbols=None,timeframe='1D',start="2010-01-01",end=None,limit=None,output_as=None):
+    def getStockPrices(self,symbols=None,timeframe='1D',start=None,end=None,limit=None,output_as=None):
         '''
             Send an collection of stock symbols to the API in order to obtain the
             associated prices.
@@ -144,6 +145,11 @@ class Alpaca:
 
             
         '''
+
+
+
+
+
 
         if symbols == None :
             import Helper.helpers as Helper
@@ -185,16 +191,6 @@ class Alpaca:
 
 
 
-
-# obj=Alpaca()
-# obj.connect()
-# prices=obj.getStockPrices(["AAPL","XOM"])
-
-# assetList=obj.getAssetList()
-
-
-
-# print(assetList[0])
 
 
 

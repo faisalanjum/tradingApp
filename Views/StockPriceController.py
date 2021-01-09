@@ -18,21 +18,22 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))
 import config,json 
 from sqlalchemy import create_engine,asc,desc
 from sqlalchemy.orm import sessionmaker,Session
-from Model.app_db import StockPricesDaily,Vendor
+from Model.app_db import StockPricesDaily,Vendor,Symbol,StockPricesIntraday
 from Providers.Alpaca import Alpaca
 from datetime import date
 from Helper.helpers import object_as_dict
+import pandas as pd
 
 
 
-class StockPriceDailyController:
+class StockPriceController:
     def __init__(self):
         self.url=config.DB_URL
         self.Session=sessionmaker()
     
 
 
-    def hist_stock_pri_pvd(self,provider_name,stock_symbol=None):
+    def hist_stock_pri_pvd(self,provider_name,frequncy,stock_symbol=None,historical=True,start=None,end=None,price_type="daily"):
 
 
 
@@ -49,8 +50,29 @@ class StockPriceDailyController:
 
 
 
-        stock_list:list( )
-            A list of stock symbols that conform to the Alpaca API request structure.
+        stock_symbol:str( )
+            "day" or "1D" for day
+            "1Min" for one minute data
+            "5Min" for five finute data
+            "15Min" for fifteen min data
+
+
+
+
+
+
+       start:datetime string in format yyyy-mm-dd
+
+
+
+       end:datatime str() in yyyy-mm-dd format
+
+
+       price_type:str()
+
+       "daily" to get daily data 
+       "inter" 
+            
 
 
         list of stocks
@@ -66,6 +88,16 @@ class StockPriceDailyController:
         '''
 
         #engine created
+
+
+        
+
+
+        
+
+
+
+
 
 
         engine=create_engine(self.url)
@@ -88,17 +120,58 @@ class StockPriceDailyController:
         #records from alpaca
         
         if provider_name=="Alpaca":
+            if historical == True and price_type=="daily":
+
+                start=pd.Timestamp('2008-01-01', tz='America/New_York').isoformat()
+                end=pd.Timestamp('today', tz='America/New_York').isoformat()
+
+
+
+
+
+            elif historical==False and price_type=="daily":
+
+                start=pd.Timestamp('today', tz='America/New_York').isoformat()
+
+
+
+            elif historical==True and price_type=="intraday":
+                start=pd.Timestamp('2015-01-01', tz='America/New_York').isoformat()
+                end=pd.Timestamp('today', tz='America/New_York').isoformat()
+
+
+            else:
+
+                start=pd.Timestamp('today', tz='America/New_York').isoformat()
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
             api=Alpaca()
 
             if stock_symbol == None:
-                barsets=api.getStockPrices()
+                barsets=api.getStockPrices(timeframe=frequncy,start=start,end=end)
 
             elif type(stock_symbol) == list :
 
-                barsets=api.getStockPrices(stock_symbol)
+                barsets=api.getStockPrices(stock_symbol,timeframe=frequncy,start=start,end=end)
 
 
-
+           
              
 
             keylist=[] 
@@ -124,15 +197,29 @@ class StockPriceDailyController:
                 
                 for bar in barset:
 
-                   
-                    dct={"vendor_id":int(vendor_id),
-                        "stock_symbol":str(keylist[i]),
-                        "datetime": bar.t.date(),
-                        "open":bar.o,
-                        "high":bar.h,
-                        "low":bar.l,
-                        "close":bar.c,
-                        "volume":bar.v,}
+
+
+                    if price_type=="daily":
+                        dct={"vendor_id":int(vendor_id),
+                            "stock_symbol":str(keylist[i]),
+                            "datetime": bar.t.date(),
+                            "open":bar.o,
+                            "high":bar.h,
+                            "low":bar.l,
+                            "close":bar.c,
+                            "volume":bar.v,}
+
+                    else:
+                        dct={"vendor_id":int(vendor_id),
+                            "stock_symbol":str(keylist[i]),
+                            "datetime": bar.t,
+                            "open":bar.o,
+                            "high":bar.h,
+                            "low":bar.l,
+                            "close":bar.c,
+                            "volume":bar.v,
+                            "frequency":frequncy,}
+
 
 
 
@@ -141,22 +228,45 @@ class StockPriceDailyController:
                     stockPrices.append(dct)
 
 
-
+            
             #bulk inserts into the Symbol table
             
+            if price_type=="daily":
+                try:
+                    session=self.Session()
+                    session.bulk_insert_mappings(StockPricesDaily,stockPrices)
+                except Exception as e:
+                    raise e
+                    print(f"There was some Error inserting data Error:{e}")
+                    session.rollback()
+                finally:
+                    print("records added to the table")
 
-            try:
-                session=self.Session()
-                session.bulk_insert_mappings(StockPricesDaily,stockPrices)
-            except Exception as e:
-                raise e
-                print(f"There was some Error inserting data Error:{e}")
-                session.rollback()
-            finally:
-                print("records added to the table")
+                    session.commit()
+            elif price_type=="intraday":
 
-                session.commit()
-        
+                try:
+                    session=self.Session()
+                    session.bulk_insert_mappings(StockPricesIntraday,stockPrices)
+                except Exception as e:
+                    raise e
+                    print(f"There was some Error inserting data Error:{e}")
+                    session.rollback()
+                finally:
+                    print("records added to the table")
+
+                    session.commit()
+
+
+            else:
+
+
+
+                print("select a right argument for price_type choices are daily,intraday")
+    
+
+
+
 
     def getDailyPrices(self,symbol=None,frm_date=None,to_date=None,adjusted=False):
         '''
@@ -203,7 +313,7 @@ class StockPriceDailyController:
 
             
 
-            stockPrices=session.query(StockPricesDaily).filter(StockPricesDaily.stock_symbol.in_(stockList) ).all()
+            stockPrices=session.query(StockPricesDaily).filter(StockPricesDaily.stock_symbol.in_(stockList) ).order_by(StockPricesDaily.datetime.desc()).all()
 
             
 
@@ -218,8 +328,7 @@ class StockPriceDailyController:
 
        
                 
-        return [object_as_dict(price) for price in stockPrices]
-
+        return stockPrices
 
 
 
@@ -241,21 +350,3 @@ class StockPriceDailyController:
 
 
             
-
-        
-
-
-
-
-obj=StockPriceDailyController()
-
-
-obj.hist_stock_pri_pvd("Alpaca",stock_symbol=["MSFT"])
-
-# prices=obj.getDailyPrices(symbol=["ACIA","AAPL"])
-
-# print(prices)
-
-# print(prices)
-
-

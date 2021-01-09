@@ -90,7 +90,7 @@ class SymbolController:
 
         #creates a list of Dict for Symbol table
 
-        alpaca_dict=[{ "provided_by":int(vendor_id),"exchange_id":getattr(asset,"exchange"),"ticker":getattr(asset,"symbol"),"name":getattr(asset,"name")} for asset in asset_list]
+        alpaca_dict=[{ "provided_by":int(vendor_id),"exchange_Acr":getattr(asset,"exchange"),"ticker":getattr(asset,"symbol"),"name":getattr(asset,"name")} for asset in asset_list]
         
         unique_dict=remove_dupe_dicts(alpaca_dict)
         
@@ -232,39 +232,7 @@ class SymbolController:
 
 
 #         ofigi=OpenFigi()
-#         jobList=[]
-#         for symbol in symbols:
-#             jobList.append({'idType': 'TICKER', 'idValue': symbol,})
-
-
-
-
-
-#         chunJobLst=divide_chunks(jobList[7:],10)
-#         jobs=[]
-#         counter=0
-        
-
-
-#         for job in chunJobLst:
-
-
-#             print(counter)
-
-            
-#             if (counter+1) % 2==0:
-
-#                 print("in")
-
-
-#                 time.sleep(60)
-
-            
-#             jobs.append(ofigi.map_jobs(job))
-
-#             counter+=1
-       
-#         print(len(jobs))
+#         
 
 
 #         dfs=[pd.DataFrame.from_dict(job[0][1]["data"]) for job in jobs]
@@ -284,10 +252,10 @@ class SymbolController:
 
         
 
-obj=SymbolController()
+# obj=SymbolController()
 
 
-obj.bulkInsertFromProviders("Alpaca")
+# obj.bulkInsertFromProviders("Alpaca")
 
 
 

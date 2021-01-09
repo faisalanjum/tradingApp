@@ -60,17 +60,12 @@ class VendorController:
 
 
    
-obj=VendorController()
+# obj=VendorController()
 
 
-rec=[{
-	"name":"Alpaca",
-	"vendor_id":"PKI36ROS1FUJVRPI1UK7",},
-
-	{
-	"name":"openfigi",
-	"vendor_id":"",}]
 
 
-obj.addVendor(vendor_info=rec)
+
+
+#
 

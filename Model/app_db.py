@@ -98,9 +98,9 @@ class Symbol(Base):
     
     figi_details=relationship("Figi")
 
-    prices_interday=relationship("StockPricesIntraday")
+    prices_interday=relationship("StockPricesIntraday",backref="symbol")
 
-    prices_daily=relationship("StockPricesDaily")
+    prices_daily=relationship("StockPricesDaily",backref="symbol")
 
 
 
@@ -167,16 +167,15 @@ class StockPricesIntraday(Base):
     low=Column(Float,nullable=False)
     close=Column(Float,nullable=False)
     volume=Column(BigInteger,nullable=False) 
-    adj_open=Column(Float,nullable=False)
-    adj_high=Column(Float,nullable=False)
-    adj_low=Column(Float,nullable=False)
-    adj_close=Column(Float,nullable=False)
-    adj_volume=Column(Float,nullable=False)
+    adj_open=Column(Float,nullable=True)
+    adj_high=Column(Float,nullable=True)
+    adj_low=Column(Float,nullable=True)
+    adj_close=Column(Float,nullable=True)
+    adj_volume=Column(Float,nullable=True)
     frequency=Column(String,nullable=False)
     created_at=Column(DateTime(timezone=True), server_default=func.now())
     updated_at=Column(DateTime(timezone=True),onupdate=func.now())
-
-
+    
 
 
 
@@ -223,7 +222,7 @@ class StockAdjustment(Base):
     divident_amount=Column(Float, nullable=False)
     split_coef=Column(Float,nullable=False)
     shares_outstanding=Column(BigInteger,nullable=False)
-
+   
 
 
 

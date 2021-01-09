@@ -27,8 +27,15 @@ SIMFIN_DIR = os.path.join("simfin_database")
 API_KEY_SIMFIN = "vHOwuZOEK3CR3tLhv4wHjVohTK9Brv2h"
 
 
+#ALPHAVANTAGE
+
+ALPHAVANTAGE_KEY=""
+
 
 # Database
+
+
+
 DB_USER="postgres"
 DB_PASSWORD="Sunny@123"
 DB_HOST="localhost"

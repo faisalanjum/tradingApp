@@ -35,10 +35,14 @@
         <tr>
           <th>Symbol</th>
           <th>Name</th>
-          <th>Price</th>
-          <th>RSI14</th>
-          <th>SMA20</th>
-          <th>SMA50</th>
+          <th>Datetime</th>
+          <th>high</th>
+          <th>low</th>
+          <th>open</th>
+          <th>close</th>
+          <th>volume</th>
+          <th>exchange</th>
+
         </tr>
     </thead>
 
@@ -46,32 +50,19 @@
       {% for stock in stocks %}
       <tr>
     <!--                    <td>{{stock.id}}</td>-->
-            <td>{{stock.symbol}}</td>
-            <td><a href="/stock/{{stock.symbol}}"> {{stock.name}}</a></td>
+            <td>{{stock.stock_symbol}}</td>
+             <td>{{stock.symbol.name}}</td>
+             <th>{{stock.datetime}}</th>
+              <td>{{stock.high}}</td>
+               <td>{{stock.low}}</td>
+                <td>{{stock.open}}</td>
+                 <td>{{stock.close}}</td>
+                  <td>{{stock.volume}}</td>
+                 
+                    <td>{{stock.symbol.exchange_Acr}}</td>
 
-          {% if indicator_values[stock.symbol] %}
+            
 
-            <td>{{indicator_values[stock.symbol].close|round(2)  }}</td>
-
-            {% if indicator_values[stock.symbol].rsi_14 %}
-            <td>{{ indicator_values[stock.symbol].rsi_14|round(2) }}</td>
-            {% else %} <td>n/a</td>
-            {% endif %}
-
-            {% if indicator_values[stock.symbol].sma_20 %}
-            <td>{{indicator_values[stock.symbol].sma_20|round(2)  }}</td>
-            {% else %} <td>n/a</td>
-            {% endif %}
-
-            {% if indicator_values[stock.symbol].sma_50 %}
-            <td>{{indicator_values[stock.symbol].sma_50|round(2)  }}</td>
-            {% else %} <td>n/a</td>
-
-            {% endif %}
-
-
-            {% endif %}
-      </tr>
       {% endfor %}
 
     </tbody>
